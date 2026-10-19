@@ -20,6 +20,7 @@ use HiEvents\Http\Actions\Attendees\ExportAttendeesAction;
 use HiEvents\Http\Actions\Attendees\GetAttendeeAction;
 use HiEvents\Http\Actions\Attendees\GetAttendeeActionPublic;
 use HiEvents\Http\Actions\Attendees\GetAttendeesAction;
+use HiEvents\Http\Actions\Attendees\GetParticipantCollectionAction;
 use HiEvents\Http\Actions\Attendees\PartialEditAttendeeAction;
 use HiEvents\Http\Actions\Attendees\ResendAttendeeTicketAction;
 use HiEvents\Http\Actions\Auth\AcceptInvitationAction;
@@ -351,6 +352,7 @@ $router->middleware(['auth:api', 'route.permission'])->group(
         // Attendees
         $router->post('/events/{event_id}/attendees', CreateAttendeeAction::class);
         $router->get('/events/{event_id}/attendees', GetAttendeesAction::class);
+        $router->get('/events/{event_id}/participant-collection', GetParticipantCollectionAction::class);
         $router->get('/events/{event_id}/attendees/{attendee_id}', GetAttendeeAction::class);
         $router->put('/events/{event_id}/attendees/{attendee_id}', EditAttendeeAction::class);
         $router->patch('/events/{event_id}/attendees/{attendee_id}', PartialEditAttendeeAction::class);

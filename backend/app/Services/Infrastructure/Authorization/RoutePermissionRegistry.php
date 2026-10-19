@@ -186,6 +186,7 @@ final class RoutePermissionRegistry
             self::ACTION . 'CapacityAssignments\\GetCapacityAssignmentAction' => Permission::EVENT_CONTENT_VIEW,
 
             self::ACTION . 'Attendees\\GetAttendeesAction',
+            self::ACTION . 'Attendees\\GetParticipantCollectionAction',
             self::ACTION . 'Attendees\\GetAttendeeAction' => Permission::ATTENDEES_VIEW,
 
             self::ACTION . 'Attendees\\CreateAttendeeAction',

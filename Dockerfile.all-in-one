@@ -22,7 +22,7 @@ ENV PHP_OPCACHE_ENABLE=1
 # Switch to root for installing extensions and packages
 USER root
 
-RUN install-php-extensions intl
+RUN install-php-extensions intl gd
 
 RUN apk add --no-cache nodejs yarn nginx supervisor dos2unix
 
@@ -37,7 +37,6 @@ RUN mkdir -p /app/backend/bootstrap/cache \
     && find /app/backend -type f -exec chmod 644 {} \; \
     && chmod -R 755 /app/backend/storage /app/backend/bootstrap/cache \
     && composer install --working-dir=/app/backend \
-        --ignore-platform-reqs \
         --no-interaction \
         --no-dev \
         --optimize-autoloader \

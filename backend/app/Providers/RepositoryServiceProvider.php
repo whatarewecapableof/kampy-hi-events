@@ -131,6 +131,7 @@ class RepositoryServiceProvider extends ServiceProvider
         ProductRepositoryInterface::class => ProductRepository::class,
         OrderRepositoryInterface::class => OrderRepository::class,
         AttendeeRepositoryInterface::class => AttendeeRepository::class,
+        \HiEvents\Repository\Interfaces\ParticipantCollectionRepositoryInterface::class => \HiEvents\Repository\Eloquent\ParticipantCollectionRepository::class,
         AffiliateRepositoryInterface::class => AffiliateRepository::class,
         OrderItemRepositoryInterface::class => OrderItemRepository::class,
         QuestionRepositoryInterface::class => QuestionRepository::class,
