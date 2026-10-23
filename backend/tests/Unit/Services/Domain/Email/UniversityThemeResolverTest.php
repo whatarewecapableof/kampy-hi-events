@@ -99,6 +99,20 @@ class UniversityThemeResolverTest extends TestCase
         unlink($path);
     }
 
+    public function test_resolve_for_mail_uses_the_school_theme_then_the_kamp_fallback(): void
+    {
+        $resolver = new UniversityThemeResolver(base_path('../frontend/src/styles/universityThemes.json'));
+        $gvsu = Mockery::mock(\HiEvents\DomainObjects\EventDomainObject::class);
+        $gvsu->shouldReceive('getSlug')->andReturn('grand-valley-state-university');
+        $other = Mockery::mock(\HiEvents\DomainObjects\EventDomainObject::class);
+        $other->shouldReceive('getSlug')->andReturn('gcu-kamp-love-fall-2026');
+
+        $this->assertSame('#0032a0', $resolver->resolveForMail($gvsu)->primary);
+        $this->assertSame('#2b663d', $resolver->resolveForMail($other)->primary);
+        $this->assertSame('#2b663d', $resolver->resolveForMail()->primary);
+        $this->assertNull((new UniversityThemeResolver('/missing/for-mail/universityThemes.json'))->resolveForMail($gvsu));
+    }
+
     public function test_logs_manifest_failures_once_without_sensitive_context(): void
     {
         $logger = Mockery::mock(LoggerInterface::class);

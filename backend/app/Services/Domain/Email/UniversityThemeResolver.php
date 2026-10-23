@@ -37,6 +37,16 @@ class UniversityThemeResolver
         return $this->resolveEntry(self::FALLBACK_KEY, true);
     }
 
+    /**
+     * The theme an email should wear: the school's colours when the event maps to
+     * a school, otherwise the shared Kamp fallback. Null only when the manifest is
+     * unusable, so callers keep a safe default.
+     */
+    public function resolveForMail(?EventDomainObject $event = null): ?UniversityEmailThemeDTO
+    {
+        return ($event ? $this->resolveForEvent($event) : null) ?? $this->resolveFallback();
+    }
+
     private function resolveEntry(string $key, bool $fallback): ?UniversityEmailThemeDTO
     {
         $path = $this->resolvedManifestPath();

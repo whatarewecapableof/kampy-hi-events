@@ -4,11 +4,13 @@ namespace HiEvents\Mail\User;
 
 use HiEvents\DomainObjects\UserDomainObject;
 use HiEvents\Mail\BaseMail;
+use HiEvents\Services\Domain\Email\UniversityThemeResolver;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 
 /**
  * @uses /backend/resources/views/emails/user/user-invited.blade.php
+ * @uses /backend/resources/views/emails/user/user-invited-text.blade.php
  */
 class UserInvited extends BaseMail
 {
@@ -40,12 +42,17 @@ class UserInvited extends BaseMail
 
     public function content(): Content
     {
+        // Standalone HTML in the operating-product style (same structure as the
+        // university order emails). Staff invitations carry no school, so they use
+        // the shared Kamp fallback theme.
         return new Content(
-            markdown: 'emails.user.user-invited',
+            view: 'emails.user.user-invited',
+            text: 'emails.user.user-invited-text',
             with: [
                 'invitedUser' => $this->invitedUser,
                 'appName' => $this->appName,
-                'inviteLink' => $this->inviteLink
+                'inviteLink' => $this->inviteLink,
+                'theme' => app(UniversityThemeResolver::class)->resolveForMail(),
             ]
         );
     }
