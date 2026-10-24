@@ -13,6 +13,12 @@ use HiEvents\Mail\Attendee\AttendeeTicketMail;
 use HiEvents\Mail\Order\OrderSummary;
 use HiEvents\Services\Domain\Email\DTO\RenderedEmailTemplateDTO;
 
+/**
+ * Order confirmations and tickets use the one themed template for every event: the
+ * school's colours when the event maps to a school, otherwise the shared Kamp
+ * fallback. A GCU family and a GVSU family get the same email. The legacy Markdown
+ * branch remains only for an unusable theme manifest.
+ */
 class MailBuilderService
 {
     public function __construct(
@@ -44,7 +50,7 @@ class MailBuilderService
             eventSettings: $eventSettings,
             organizer: $organizer,
             renderedTemplate: $renderedTemplate,
-            universityTheme: $this->universityThemeResolver->resolveForEvent($event),
+            universityTheme: $this->universityThemeResolver->resolveForMail($event),
         );
     }
 
@@ -69,7 +75,7 @@ class MailBuilderService
             eventSettings: $eventSettings,
             invoice: $invoice,
             renderedTemplate: $renderedTemplate,
-            universityTheme: $this->universityThemeResolver->resolveForEvent($event),
+            universityTheme: $this->universityThemeResolver->resolveForMail($event),
         );
     }
 

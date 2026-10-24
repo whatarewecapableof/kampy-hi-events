@@ -55,6 +55,7 @@
                 {!! $eventSettings->getGetEmailFooterHtml() !!}
             </td></tr>
         </table>
+        @include('emails.partials.footer')
     </td></tr>
 </table>
 </body>

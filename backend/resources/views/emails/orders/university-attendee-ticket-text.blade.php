@@ -45,3 +45,5 @@ Kamp Love
 
 {!! $plainEmailFooter !!}
 @endif
+
+@include('emails.partials.footer-text')

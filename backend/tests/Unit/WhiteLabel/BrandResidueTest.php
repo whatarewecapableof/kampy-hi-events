@@ -17,6 +17,8 @@ class BrandResidueTest extends TestCase
 {
     private const UPSTREAM_SUPPORT_ADDRESSES = ['hello@hi.events', 'support@hi.events'];
 
+    private const MAIL_THEME = 'resources/views/vendor/mail/html/themes/default.blade.php';
+
     private function backendPath(string $relative): string
     {
         return dirname(__DIR__, 3).'/'.ltrim($relative, '/');
@@ -93,57 +95,97 @@ class BrandResidueTest extends TestCase
         );
     }
 
-    public function test_the_email_theme_projects_the_kamp_palette(): void
+    public function test_the_email_theme_projects_the_operating_palette(): void
     {
-        $theme = $this->read('resources/views/vendor/mail/html/themes/default.css');
+        // The shared Markdown layout follows the operating-product style (September
+        // 9/10 university-theme contract): #222222 text on white, a #f4f5f7 page,
+        // DM Sans with an Arial fallback. School and Kamp-fallback colours are not
+        // literals here; the theme reads them from frontend/src/styles/universityThemes.json.
+        $this->assertFileDoesNotExist(
+            $this->backendPath('resources/views/vendor/mail/html/themes/default.css'),
+            'a stale default.css would never be read (default.blade.php wins) and would mislead'
+        );
+        $theme = $this->read(self::MAIL_THEME);
 
-        // Allowlist, not denylist. The previous denylist named six stock values and
-        // passed while #b0adc5 survived on .footer p at 2.00:1 against the new cream
-        // ground. An allowlist cannot miss a value nobody thought to forbid.
-        //
-        // Email HTML supports no custom properties, so these are literal projections
-        // of --kamp-* and must stay in step with frontend/src/styles/global.scss.
+        // Allowlist, not denylist: an allowlist cannot miss a value nobody thought to forbid.
         preg_match_all('/#[0-9a-fA-F]{3,6}\b/', $theme, $matches);
         $used = array_unique(array_map('strtolower', $matches[0]));
 
         $allowed = [
-            '#171717', // --kamp-ink
-            '#585254', // --kamp-muted
-            '#dadada', // --kamp-line
-            '#f9f4f0', // --kamp-cream
-            '#efe7db', // --kamp-sand
-            '#2f5147', // --kamp-forest
-            '#2f6b4f', // --kamp-ok
-            '#9f3620', // --kamp-stop
+            '#222222', // text
+            '#555b66', // muted text
+            '#d8dbe2', // lines
+            '#f4f5f7', // page
+            '#9f3620', // error button
             '#ffffff', '#fff',
         ];
 
         $this->assertSame(
             [],
             array_values(array_diff($used, $allowed)),
-            'non-Kamp colour present in the email adapter table'
+            'colour outside the operating palette in the email theme'
         );
 
-        // The projection must actually be present, not merely free of stock values.
-        foreach (['#f9f4f0', '#585254', '#2f5147', '#171717'] as $kamp) {
-            $this->assertStringContainsString($kamp, $theme, "kamp value {$kamp} missing");
+        foreach (['#f4f5f7', '#222222', '#555b66', '#d8dbe2', "'DM Sans'"] as $value) {
+            $this->assertStringContainsString($value, $theme, "operating value {$value} missing");
         }
+
+        // Theme colours come from the shared manifest through the resolver.
+        $this->assertStringContainsString('resolveForMail(', $theme);
+        foreach (['primary', 'secondary', 'onSecondary', 'secondarySoft'] as $role) {
+            $this->assertStringContainsString('$kampTheme->'.$role, $theme);
+        }
+
+        // The retired off-palette green must not come back.
+        $this->assertStringNotContainsString('#2f5147', $theme);
     }
 
     public function test_email_footer_text_meets_the_normal_text_contrast_threshold(): void
     {
         // .footer p and .footer a render the copyright line and any configured
-        // APP_EMAIL_FOOTER_TEXT on the .body ground. This pairing was 2.00:1.
-        $theme = $this->read('resources/views/vendor/mail/html/themes/default.css');
+        // APP_EMAIL_FOOTER_TEXT on the page ground, below the card.
+        $theme = $this->read(self::MAIL_THEME);
 
-        $this->assertMatchesRegularExpression('/\.footer p \{[^}]*color: #585254/s', $theme);
-        $this->assertMatchesRegularExpression('/\.footer a \{[^}]*color: #585254/s', $theme);
+        $this->assertMatchesRegularExpression('/\.footer p \{[^}]*color: #555b66/s', $theme);
+        $this->assertMatchesRegularExpression('/\.footer a \{[^}]*color: #555b66/s', $theme);
 
         $this->assertGreaterThanOrEqual(
             4.5,
-            $this->contrastRatio('#585254', '#f9f4f0'),
+            $this->contrastRatio('#555b66', '#f4f5f7'),
             'email footer text must meet the 4.5:1 normal-text threshold'
         );
+    }
+
+    public function test_standalone_kamp_emails_carry_the_shared_footer_and_attribution(): void
+    {
+        foreach ([
+            'resources/views/emails/user/user-invited.blade.php',
+            'resources/views/emails/orders/university-summary.blade.php',
+            'resources/views/emails/orders/university-attendee-ticket.blade.php',
+            'resources/views/emails/registration/completion-invitation.blade.php',
+        ] as $view) {
+            $this->assertStringContainsString("@include('emails.partials.footer')", $this->read($view), $view);
+        }
+
+        foreach ([
+            'resources/views/emails/user/user-invited-text.blade.php',
+            'resources/views/emails/orders/university-summary-text.blade.php',
+            'resources/views/emails/orders/university-attendee-ticket-text.blade.php',
+            'resources/views/emails/registration/completion-invitation-text.blade.php',
+        ] as $view) {
+            $this->assertStringContainsString("@include('emails.partials.footer-text')", $this->read($view), $view);
+        }
+
+        // As in the shared layout, the attribution sits after the footer-text
+        // conditional closes, never inside it.
+        foreach (['resources/views/emails/partials/footer.blade.php', 'resources/views/emails/partials/footer-text.blade.php'] as $partial) {
+            $contents = $this->read($partial);
+            $branchEnd = strpos($contents, '@endif');
+            $this->assertNotFalse($branchEnd, $partial);
+            $this->assertStringNotContainsString('Powered by', substr($contents, 0, $branchEnd), $partial);
+            $this->assertStringContainsString('Powered by', substr($contents, $branchEnd), $partial);
+        }
+        $this->assertMatchesRegularExpression('/Powered by.*font-size:13px|font-size:13px.*Powered by/s', $this->read('resources/views/emails/partials/footer.blade.php'));
     }
 
     /** WCAG 2.1 relative luminance and contrast ratio. */
@@ -186,7 +228,7 @@ class BrandResidueTest extends TestCase
     public function test_the_licence_attribution_is_retained_in_email(): void
     {
         $layout = $this->read('resources/views/vendor/mail/html/message.blade.php');
-        $theme = $this->read('resources/views/vendor/mail/html/themes/default.css');
+        $theme = $this->read(self::MAIL_THEME);
 
         // Retained, not removed. Subordination is by order and scale only.
         $this->assertStringContainsString('Powered by', $layout);

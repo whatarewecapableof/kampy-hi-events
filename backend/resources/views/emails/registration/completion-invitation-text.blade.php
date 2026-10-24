@@ -9,3 +9,5 @@ Kamp Love · Grand Valley State University
 
 {{ __('This private link is just for your order. If it stops working, open this email again. Opening it doesn’t sign a waiver or change your choices.') }}
 {{ __('Keep this email private. Anyone with this link can open and set this order’s waivers. It doesn’t prove identity or guardianship, so only the adult attendee, or a child’s parent or legal guardian, should sign.') }}
+
+@include('emails.partials.footer-text')
